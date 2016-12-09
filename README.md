@@ -45,27 +45,27 @@ Each row has two elements, which are 1) the count based on the annotations if av
  
 ## Additional outputs
 
-The first additional output option, configurable in 'getDataInfo()', is mat files
+The first additional output option, configurable in *getDataInfo()*, is mat files
 containing the estimated density map for each of the frames in the testing set.
 This map is such that integrating over any region of it returns the estimated 
 number of object that this region contains (i.e. integrating over the entire
 map gives the total number of objects. See [1] for a full explanation). 
 
-Finally, it is possible to configure in 'getDataInfo()' the output of an image showing 
+Finally, it is possible to configure in *getDataInfo()* the output of an image showing 
 the extremal region-based density visualization technique of [1] for each frame in the testing set.
-Again, these images would be store in 'exppath'.
+Again, these images would be store in `exppath`.
  
 ## Demo
  
 To confirm that everything is setup correctly, follow these steps:
  
 * Install and setup the dependencies.
-* Place the source into some path <rootpath>. 
+* Place the source into some path *rootpath*. 
 * Run `demo`. 
  
 If everything is configured properly, you should start seeing estimated 
 counts in MATLAB's command window, and output files being stored in 
-*/<rootpath>/Counting_MATLAB_package/syntheticCells/demoOutput*
+*/rootpath/batch-counting/syntheticCells/demoOutput*
  
 ## Relevant publications
 
