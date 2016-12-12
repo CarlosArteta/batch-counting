@@ -1,4 +1,4 @@
-function seg = segmentDensity(densityEst,orgIm,d)
+function [classMask, seg] = segmentDensity(densityEst,orgIm,d)
 
 %plotting colors
 colors = 'gbmyckrw';
@@ -69,35 +69,39 @@ classMask = PadIm(classMask,d.cropSize);
 classMask = imresize(classMask,[size(orgIm,1) size(orgIm,2)],...
   'nearest');
 
-nClasses = max(classMask(:));
-
-imshow(orgIm);
-
-hold on;
-for class = 1:nClasses
-  B = bwboundaries(classMask == class);
-  if class > 8
-    color = 'w';
-  else
-    color = colors(class);
+if d.segment
+  
+  nClasses = max(classMask(:));
+  
+  imshow(orgIm);
+  
+  hold on;
+  for class = 1:nClasses
+    B = bwboundaries(classMask == class);
+    if class > 8
+      color = 'w';
+    else
+      color = colors(class);
+    end
+    for i=1:numel(B)
+      hline = line(B{i}(:,2),B{i}(:,1),'Color',color,'LineWidth',3, 'LineStyle','-','marker','.');
+    end
   end
-  for i=1:numel(B)
-    hline = line(B{i}(:,2),B{i}(:,1),'Color',color,'LineWidth',3, 'LineStyle','-','marker','.');
+  
+  for class = 2:nClasses
+    if ~isempty(classText{class})
+      xy = classText{class};
+      offside = (xy(:,1) > usafeBandX) |  (xy(:,2) > usafeBandY) ...
+        |  (xy(:,2) < lsafeBandY);
+      xy(offside,:) = [];
+      h = text(xy(:,1), xy(:,2),num2str(class),'color',[0.5 0 0],'FontSize',28,'FontWeight', 'demi');
+      set(h,'Clipping','on');
+    end
   end
+  
+  hold off;
+  
+  seg = export_fig('-q100','-transparent');
+else
+  seg = [];
 end
-
-for class = 2:nClasses
-  if ~isempty(classText{class})
-    xy = classText{class};
-    offside = (xy(:,1) > usafeBandX) |  (xy(:,2) > usafeBandY) ...
-      |  (xy(:,2) < lsafeBandY);
-    xy(offside,:) = [];
-    h = text(xy(:,1), xy(:,2),num2str(class),'color',[0.5 0 0],'FontSize',28,'FontWeight', 'demi');
-    set(h,'Clipping','on');
-  end
-end
-
-hold off;
-
-seg = export_fig('-q100','-transparent');
-
