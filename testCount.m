@@ -1,7 +1,7 @@
 function testCount(d,testData,b,dict)
 
 nFrames = size(testData,1);
-results = zeros(nFrames,3); %[GTcount EstimatedCount visCount];
+results = zeros(nFrames,4); %[GTcount EstimatedCount visCount];
 
 for f = 1:nFrames
   
@@ -54,10 +54,11 @@ for f = 1:nFrames
     normCte = sum(orgDensityEst(:))/sum(densityEst(:));
     orgDensityEst = orgDensityEst/normCte;
     
-    [classMask, seg] = segmentDensity(orgDensityEst,orgIm,d);
+    [classMask, outDots, seg] = segmentDensity(orgDensityEst,orgIm,d);
     visDenstity = orgDensityEst;
     visDenstity(classMask==0) = 0;
-    visCount = sum(visDenstity(:));
+    maskCount = sum(visDenstity(:));
+    visCount = size(outDots,1);
     
     ext = strfind(testData{f,1},'.');
     if isempty(ext)
@@ -65,19 +66,24 @@ for f = 1:nFrames
     else
       nameend = ext-1;
     end
-    save(fullfile(d.exppath,[testData{f,1}(1:nameend) '_mask.mat']),'classMask');
+    save(fullfile(d.exppath,[testData{f,1}(1:nameend) '_mask.mat']),...
+      'classMask','outDots');
     if d.segment %save visualization image
       imwrite(seg,fullfile(d.exppath,[testData{f,1}(1:nameend) '.jpg']));
     end
   else
     visCount = NaN;
+    maskCount = NaN;
   end
   
   % store results for this frame
-  results(f,:) = [GT globalCount visCount];
-  disp(['Density GT: ' num2str(GT)...
-    ' - Estimated Global: ' num2str(globalCount)...
-    ' - Estimated Visualization: ' num2str(visCount)]);
+  results(f,:) = [GT globalCount maskCount visCount];
+  disp(['Density GT: ' num2str(GT)]);
+  disp('Estimated counts: ');
+  disp(['Global: ' num2str(globalCount)]);
+  disp(['Over mask : ' num2str(maskCount)]);
+  disp(['Visualization : ' num2str(visCount)]);
+  disp('');
   
 end %end stack testing
 
@@ -87,10 +93,11 @@ figure;
 plot([0 max(results(:))],[0 max(results(:))],'-r','linewidth',2);
 hold on,
 plot(results(:,1),results(:,2),'ob','linewidth',3);
-plot(results(:,1),results(:,3),'og','linewidth',3);
+plot(results(:,1),results(:,3),'dg','linewidth',3);
+plot(results(:,1),results(:,4),'sk','linewidth',3);
 xlabel('GT count','fontsize',14);
 ylabel('Estimated count','fontsize',14);
-legend('Reference','GlobalCount','VisCount','Location','NorthWest');
+legend('Reference','GlobalCount','MaskCount','VisCount','Location','NorthWest');
 title(['Predicted counts - Dictionary size: ' num2str(d.dictSize)]...
   ,'fontsize',14);
 resIm = export_fig('-q100','-transparent');

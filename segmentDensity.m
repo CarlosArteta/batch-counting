@@ -1,4 +1,4 @@
-function [classMask, seg] = segmentDensity(densityEst,orgIm,d)
+function [classMask, outDots, seg] = segmentDensity(densityEst,orgIm,d)
 
 %plotting colors
 colors = 'gbmyckrw';
@@ -8,6 +8,8 @@ usafeBandX = round(size(orgIm,2) - size(orgIm,2)*0.05);
 usafeBandY = round(size(orgIm,1) - size(orgIm,1)*0.02);
 lsafeBandY = round(size(orgIm,1)*0.02);
 
+%estimated object centres dots
+outDots = [];
 
 img = uint8(255*mat2gray(densityEst));
 %Setup for the MSER algorithm
@@ -21,6 +23,7 @@ regionTH = 7;
 [r,ell] = vl_mser(img,'MaxArea',maxPixels/numPixels,'MinArea',...
   minPixels/numPixels,'MaxVariation',0.2,'MinDiversity',0.2,...
   'Delta',1, 'BrightOnDark',BoD, 'DarkOnBright',DoB);
+
 %Encode MSERs
 nFeatures = 2;
 lambda = -1;
@@ -69,10 +72,26 @@ classMask = PadIm(classMask,d.cropSize);
 classMask = imresize(classMask,[size(orgIm,1) size(orgIm,2)],...
   'nearest');
 
+%estimate object centres
+for i = 1:nRegions
+  if class(i) == 1
+    outDots = [outDots ; round(regions(i).Centroid)];
+  elseif class(i) > 1
+    pixels = single(regions(i).PixelList);
+    pixels = [pixels single(img(sub2ind(size(img),pixels(:,2),pixels(:,1))))/-255+1 ];
+    if size(pixels,1) >= class(i)
+      dots = round(vl_kmeans(pixels', class(i)));
+      dots = dots(1:2,:)';
+    else
+      dots = pixels(:,1:2)';
+    end
+    outDots = [outDots ; dots];
+  end
+end
+
+%produce output figure
 if d.segment
-  
   nClasses = max(classMask(:));
-  
   imshow(orgIm);
   
   hold on;
